@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="300" content="width=device-width, initial-scale=1">
+  <title>Bakery Check-in</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 25px; background: #fff9e6; }
+    h2 { color: #d35400; }
+    button { 
+      padding: 15px 30px; 
+      font-size: 18px; 
+      margin: 12px; 
+      border: none; 
+      border-radius: 8px; 
+      background: #e67e22; 
+      color: white; 
+      cursor: pointer; 
+    }
+    button:hover { background: #d35400; }
+    #status { margin-top: 20px; font-weight: bold; min-height: 24px; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>🥐 Bakery Staff Check-in</h2>
+  <button onclick="check('check_in')">CallCheck In</button>
+  <button onclick="check('check_out')">CallCheck Out</button>
+  <div id="status"></div>
+
+  <script>
+    // 🔜 We'll update this URL in Step 4 once we have the n8n webhook
+    const WEBHOOK_URL = "https://placeholder-for-webhook-url";
+
+    function check(action) {
+      const staffId = prompt("Enter your Staff ID (e.g., EMP001):");
+      if (!staffId || staffId.trim() === "") {
+        alert("Staff ID is required!");
+        return;
+      }
+
+      const statusEl = document.getElementById("status");
+      statusEl.className = "";
+      statusEl.innerText = "📍 Getting your location...";
+
+      if (!navigator.geolocation) {
+        statusEl.className = "error";
+        statusEl.innerText = "❌ Location not supported!";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          statusEl.innerText = "📤 Sending data...";
+
+          fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              staff_id: staffId.trim().toUpperCase(),
+              action: action,
+              latitude: latitude,
+              longitude: longitude,
+              userAgent: navigator.userAgent
+            })
+          })
+          .then(res => {
+            if (res.ok) {
+              statusEl.className = "success";
+              statusEl.innerText = "✅ " + (action === 'check_in' ? 'Checked IN' : 'Checked OUT') + "!";
+            } else {
+              statusEl.className = "error";
+              statusEl.innerText = "❌ Failed. Try again.";
+            }
+          })
+          .catch(err => {
+            statusEl.className = "error";
+            statusEl.innerText = "❌ Network error.";
+            console.error(err);
+          });
+        },
+        (err) => {
+          statusEl.className = "error";
+          statusEl.innerText = "❌ GPS denied or unavailable.";
+          console.error(err);
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    }
+  </script>
+</body>
+</html>

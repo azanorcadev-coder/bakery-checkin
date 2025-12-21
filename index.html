@@ -1,36 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="300" content="width=device-width, initial-scale=1">
-  <title>Bakery Check-in</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CAKE INN Attendance</title>
+
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 25px; background: #fff9e6; }
-    h2 { color: #d35400; }
-    button { 
-      padding: 15px 30px; 
-      font-size: 18px; 
-      margin: 12px; 
-      border: none; 
-      border-radius: 8px; 
-      background: #e67e22; 
-      color: white; 
-      cursor: pointer; 
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, sans-serif;
     }
-    button:hover { background: #d35400; }
-    #status { margin-top: 20px; font-weight: bold; min-height: 24px; }
-    .success { color: green; }
-    .error { color: red; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(circle at top, #6a3fc8, #3b1d6b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .card {
+      text-align: center;
+      padding: 40px 30px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      width: 320px;
+    }
+
+    h2 {
+      margin-bottom: 30px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      margin: 14px 0;
+      border: none;
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .check-in {
+      background: linear-gradient(135deg, #3ee6c1, #1cc8a0);
+      box-shadow: 0 8px 18px rgba(30, 200, 160, 0.5);
+    }
+
+    .check-out {
+      background: linear-gradient(135deg, #ff9a62, #ff6a3d);
+      box-shadow: 0 8px 18px rgba(255, 120, 70, 0.5);
+    }
+
+    #status {
+      margin-top: 22px;
+      min-height: 24px;
+      font-weight: 600;
+    }
+
+    .success {
+      color: #7dffb3;
+    }
+
+    .error {
+      color: #ff9a9a;
+    }
   </style>
 </head>
+
 <body>
-  <h2>CAKE INN Attendence 🎂🎂🎂🎂 </h2>
-  <button onclick="check('check_in')">CallCheck In</button>
-  <button onclick="check('check_out')">CallCheck Out</button>
-  <div id="status"></div>
+  <div class="card">
+    <h2>CAKE INN Attendance</h2>
+
+    <button class="btn check-in" onclick="check('check_in')">
+      Check In
+    </button>
+
+    <button class="btn check-out" onclick="check('check_out')">
+      Check Out
+    </button>
+
+    <div id="status"></div>
+  </div>
 
   <script>
-    // 🔜 We'll update this URL in Step 4 once we have the n8n webhook
-    const WEBHOOK_URL = "https://bakeshop1.app.n8n.cloud/webhook-test/cake-inn";
+    const WEBHOOK_URL =
+      "https://bakeshop1.app.n8n.cloud/webhook-test/cake-inn";
 
     function check(action) {
       const staffId = prompt("Enter your Staff ID (e.g., EMP001):");
@@ -62,28 +129,31 @@
               action: action,
               latitude: latitude,
               longitude: longitude,
-              userAgent: navigator.userAgent
+              userAgent: navigator.userAgent,
+            }),
+          })
+            .then((res) => {
+              if (res.ok) {
+                statusEl.className = "success";
+                statusEl.innerText =
+                  "✅ " +
+                  (action === "check_in"
+                    ? "Checked IN successfully"
+                    : "Checked OUT successfully");
+              } else {
+                statusEl.className = "error";
+                statusEl.innerText = "❌ Failed. Try again.";
+              }
             })
-          })
-          .then(res => {
-            if (res.ok) {
-              statusEl.className = "success";
-              statusEl.innerText = "✅ " + (action === 'check_in' ? 'Checked IN' : 'Checked OUT') + "!";
-            } else {
+            .catch((err) => {
               statusEl.className = "error";
-              statusEl.innerText = "❌ Failed. Try again.";
-            }
-          })
-          .catch(err => {
-            statusEl.className = "error";
-            statusEl.innerText = "❌ Network error.";
-            console.error(err);
-          });
+              statusEl.innerText = "❌ Network error.";
+              console.error(err);
+            });
         },
-        (err) => {
+        () => {
           statusEl.className = "error";
           statusEl.innerText = "❌ GPS denied or unavailable.";
-          console.error(err);
         },
         { timeout: 10000, enableHighAccuracy: true }
       );

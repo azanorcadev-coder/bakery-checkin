@@ -132,7 +132,16 @@
               userAgent: navigator.userAgent,
             }),
           })
-            .then((res) => {
+            .then(async (res) => {
+              // ✅ NEW: Read response as text, then try to parse JSON
+              const text = await res.text();
+              let data = null;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                // Not valid JSON — keep default message
+              }
+
               if (res.ok) {
                 statusEl.className = "success";
                 statusEl.innerText =
@@ -142,7 +151,8 @@
                     : "Checked OUT successfully");
               } else {
                 statusEl.className = "error";
-                statusEl.innerText = "❌ Failed. Try again.";
+                // ✅ Show custom message from n8n if available
+                statusEl.innerText = "❌ " + (data?.message || "Failed. Try again.");
               }
             })
             .catch((err) => {
